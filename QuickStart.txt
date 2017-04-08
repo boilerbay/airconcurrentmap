@@ -1,0 +1,84 @@
+Copyright (C) 2017 Roger L Deran all rights reserved. 
+
+# QuickStart.md for AirConcurrentMap 
+
+--- 
+
+## Plugging an AirConcurrentMap into your project: 
+
+Simply include airconcurrentmap.jar in your classpath, then add 
+new AirConcurrentMap constructors or change the constructors 
+you want to replace so they construct 
+com.infinitydb.map.air.AirConcurrentMap(). There are no 
+dependencies on outside libraries. Java version 1.8 is 
+required. Performance improvements are described in 
+[AirConcurrentMap Performance 
+Testing.pdf](https://boilerbay.com/docs/AirConcurrentMap_Performance_Testing.pdf). 
+
+## Using MapVisitor, ThreadedMapVisitor, and fast forEach(). 
+
+The forEach() for AirConcurrentMap is faster than that of any 
+other standard Java library Map. However, for even more speed, 
+try the MapVisitor extension. 
+
+See test/src/com/infinitydb/map/VisitorExample.java, in which 
+you can see some MapVisitor and ThreadedMapVisitor classes, as 
+well as run and watch a hello world test. The threaded usage is 
+very simple, requiring minimal programmer effort, and it hides 
+almost all of the normally prohibitive programming complexity 
+of threading internally. Yet extensibility and code 
+re-usability are easily available as well. Once a visitor is 
+coded, it can be constructed in other code inside a single 
+expression to scan an AirConcurrentMap or one of the future 
+visitable Maps. It is possible to adapt a regular map, list, or 
+set to be able to be visited with 
+com.infinitydb.map.visitor.VisitableListWrapper and so on. 
+These will become internally threaded at some point, and are 
+all even fast compared to streams. 
+
+## Running the performance tests: 
+
+The JMH performance tests are in test/jmh/maptest. See the test 
+source for instructions. These are [Java Microbenchmark 
+Harness](http://openjdk.java.net/projects/code-tools/jmh/) 
+tests, which are well trusted now. 
+
+The test/src/com/infinitydb/map/TwitterDemo.java tests are 
+extremely simple and are intended to demonstrate performance 
+improvements convincingly. For TwitterDemo tests, you have to 
+edit to change the class being tested. 
+
+The tests which generated the graphical results in 
+AirConcurrentMap Performance Testing.pdf are there as well in 
+test/src/com/infinitydb/map/test. 
+
+Also, look at test/src/com/infinitydb/map/VisitorExample.java 
+to see the very fast AirConcurrentMap extensions. 
+
+See <https://boilerbay.com> for other products, such as new 
+Maps which are in development, and the InfinityDB Java embedded 
+database. 
+
+--- 
+
+# InfinityDB 
+
+InfinityDB is a Java embedded database available at 
+<https://boilerbay.com/infinitydb>. It is high-performance, 
+transactional, compressing, schemaless and noSQL. It has a very 
+simple low-level API that allows partial forwards and full 
+backwards database compatibility dynamically as the application 
+grows or changes. The API has only a few operations, yet it 
+allows a wide range of upper-level data models, such as 
+relational, text indexes, ordered sets, key/value, taxonomies, 
+DAGs, and mixed, plus much more. The basic API model is similar 
+to an extended key/value. 
+
+There is also an adapter in version 4 that allows InfinityDB to 
+be used optionally according to the standard Java API for Maps, 
+and in particular a ConcurrentNavigableMap, which is the most 
+capable. See src/com/infinitydb/map/db/MapHelloWorld.java for 
+many examples, including JSON and XML generation from an 
+InfinityDB with simple code. The Map API can be mixed with the 
+lower-level API in any client code as convenient. 
+

@@ -1,0 +1,16 @@
+dontinline,*.*_all_jmhStub
+dontinline,*.*_avgt_jmhStub
+dontinline,*.*_sample_jmhStub
+dontinline,*.*_ss_jmhStub
+dontinline,*.*_thrpt_jmhStub
+inline,com/infinitydb/AirConcurrentMapJMHTest.setup
+inline,com/infinitydb/AirConcurrentMapJMHTest.testForEach
+inline,com/infinitydb/AirConcurrentMapJMHTest.testGet
+inline,com/infinitydb/AirConcurrentMapJMHTest.testIterateEntrySet
+inline,com/infinitydb/AirConcurrentMapJMHTest.testIterateKeySet
+inline,com/infinitydb/AirConcurrentMapJMHTest.testIterateValues
+inline,com/infinitydb/AirConcurrentMapJMHTest.testMapVisitor
+inline,com/infinitydb/AirConcurrentMapJMHTest.testPutAndRemove
+inline,com/infinitydb/AirConcurrentMapJMHTest.testStreams
+inline,com/infinitydb/StreamsJMHAirConcurrentMapTest.setup
+inline,com/infinitydb/StreamsJMHAirConcurrentMapTest.testSummingStream
