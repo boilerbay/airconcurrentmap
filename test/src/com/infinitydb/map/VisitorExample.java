@@ -215,15 +215,15 @@ public class VisitorExample {
                 new VisitableMapWrapper<String, Number>(regularMap)));
 
         /**
-         * Some typical client code for a Java-8 dedicated system in case map
-         * may not be a VisitableMap. The code can be moved into ThreadedSummer.getSum(Map).
+         * Some typical client code in case map may not be a VisitableMap. The
+         * code can be moved into ThreadedSummer.getSum(Map) to make
+         * ThreadedSummer more general, such as with an overload of getSum().
          */
         long sum = map instanceof VisitableMap ?
                 new ThreadedSummer().getSum(map) :
-                // Assume we are in Java 8. This kind of code locks us in and is
-                // slower.
                 map.values().stream().parallel()
-                        .reduce(0L, (x, y) -> x.longValue() + y.longValue()).longValue();
+                        .mapToLong(v -> ((Long)v).longValue())
+                        .reduce(0L, (x, y) -> x + y);
         System.out.println("conditional mixture sum=" + sum);
 
     }

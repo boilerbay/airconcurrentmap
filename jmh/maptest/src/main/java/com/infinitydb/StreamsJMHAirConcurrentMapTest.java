@@ -17,14 +17,15 @@
 //    see <http://www.gnu.org/licenses/>.
 //
 //    For dual licensing of this file, see boilerbay.com. 
-//    For commercial licensing of AirConcurrentMap email 
+//    For commercial licensing of AirConurrentMap email 
 //    support@boilerbay.com. The author email is rlderan2 at boilerbay.com.
 
 package com.infinitydb;
 
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
@@ -118,18 +119,20 @@ public class StreamsJMHAirConcurrentMapTest {
 
     @Param({
             "com.infinitydb.map.air.AirConcurrentMap",
+            "java.util.HashMap",
+            "java.util.TreeMap",
             "java.util.concurrent.ConcurrentSkipListMap",
             "java.util.concurrent.ConcurrentHashMap"
     })
     static String mapClassName;
     @Param({ "0", "1", "10", "100", "1000", "10000", "100000", "1000000", "10000000" })
     static long mapSize;
-    static ConcurrentMap<Object, Long> map;
+    static Map<Object, Long> map;
 
     @Setup(Level.Trial)
     static public void setup() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        Class<ConcurrentMap<Object, Long>> mapClass =
-                (Class<ConcurrentMap<Object, Long>>)Class.forName(mapClassName);
+        Class<Map<Object, Long>> mapClass =
+                (Class<Map<Object, Long>>)Class.forName(mapClassName);
         map = mapClass.newInstance();
         Random random = new Random(System.nanoTime());
         System.gc();
@@ -141,9 +144,57 @@ public class StreamsJMHAirConcurrentMapTest {
         System.gc();
     }
 
+    // AirConcurrentMap is much faster above about 100K Entries
+    // All are slower than parallel streams
+    @Benchmark
+    public static long testSummingIterator() {
+        long sum = 0;
+        for (Long v : map.values()) {
+            sum += v;
+        }
+        return sum;
+    }
+
+    // AirConcurrentMap is fastest above 1K Entries.
+    // All are slower than parallel streams
+    @Benchmark
+    public static long testSummingForEach() {
+        final AtomicLong sum = new AtomicLong();
+        // We don't use addAndGet() because it loops internally
+        map.forEach((k, v) -> sum.set(sum.get() + v));
+        return sum.get();
+    }
+    
+    // All Maps are similar and slower than parallel streams
+    @Benchmark
+    public static long testSummingForEachParallel() {
+        final AtomicLong sum = new AtomicLong();
+        // We use addAndGet() because it is atomic, looping internally
+        map.values().stream().parallel()
+            .forEach(v -> sum.addAndGet(v));
+        return sum.get();
+    }
+
+    // AirConcurrentMap is fastest above 1K Entries.
+    // All are slower than parallel streams
+    @Benchmark
+    public static long testSummingBiConsumer() {
+        class SummingConsumer implements BiConsumer<Object, Long> {
+            long sum = 0;
+
+            public void accept(Object k, Long v) {
+              sum += v;
+            }
+        }
+        SummingConsumer summingConsumer = new SummingConsumer();
+        map.forEach(summingConsumer);
+        return summingConsumer.sum;
+    }
+
+    // AirConcurrentMap is faster at all sizes.
+    // This is the fastest.
     @Benchmark
     public static long testSummingStream() {
-        // Client code.
         return new SummingVisitor().getSum(map);
     }
 
@@ -161,7 +212,8 @@ public class StreamsJMHAirConcurrentMapTest {
                 // performance
                 return map.values().stream().parallel()
                         .mapToLong(v -> ((Long)v).longValue())
-                        .reduce(0L, (x, y) -> x + y);
+//                        .reduce(0L, (x, y) -> x + y);
+                        .sum();
             }
         }
 

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
@@ -40,6 +41,7 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
+import com.infinitydb.StreamsJMHAirConcurrentMapTest.SummingVisitor;
 import com.infinitydb.map.air.AirConcurrentMap;
 import com.infinitydb.map.visitor.MapVisitor;
 import com.infinitydb.map.visitor.ThreadedMapVisitor;
@@ -294,7 +296,7 @@ public class AirConcurrentMapJMHTest {
                         // sum = stream.reduce(0L, (x, y) -> x + y);
                     }
                 }
-                
+
                 return sum;
             }
 
@@ -358,5 +360,39 @@ public class AirConcurrentMapJMHTest {
             printStream.println("\"" + new Date() + "\",\"" + mapClassName + "\"," + mapSize + "," + bytesPerEntry);
             printStream.flush();
         }
+    }
+}
+
+/**
+ * A minimal parallel summer example. This works only with VisitableMaps such as
+ * AirConcurrentMap, and does not fall back to regular streams if necessary in
+ * getSum() as shown elsewhere.
+ * 
+ * Use: long result = new MinimalThreadedSummingVisitor().getSum(map);
+ */
+class ParrallelSummer extends ThreadedMapVisitor<Object, Long> {
+    long sum = 0;
+
+    long getSum(VisitableMap<Object, Long> map) {
+        map.visit(this);
+        return sum;
+    }
+
+    // Implement MapVisitor
+    @Override
+    public void visit(Object k, Long v) {
+        sum += v.longValue();
+    }
+
+    // Implement ThreadedMapVisitor For parallelism
+    @Override
+    public ParrallelSummer split() {
+        return new ParrallelSummer();
+    }
+
+    // Implement ThreadedMapVisitor For parallelism
+    @Override
+    public void merge(ThreadedMapVisitor tmv) {
+        sum += ((ParrallelSummer)tmv).sum;
     }
 }
