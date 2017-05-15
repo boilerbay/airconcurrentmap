@@ -1,8 +1,9 @@
+
 # AirConcurrentMap LICENSING
 
 Also see README.md.
 
-This archive file contains AirConcurrentMap version 3.1.1 built on 2017-04-08-02:09. AirConcurrentMap is covered authoritatively by the license agreements in the following files in the root of this archive: AirConcurrentMap_Noncommercial_License_Agreement_v2.pdf and AirConcurrentMap_Commercial_License_Agreement_v2.pdf.
+This archive file contains AirConcurrentMap version 3.2.1 built on 2017-05-15-03:07. AirConcurrentMap is covered authoritatively by the license agreements in the following files in the root of this archive: AirConcurrentMap_Noncommercial_License_Agreement_v2.pdf and AirConcurrentMap_Commercial_License_Agreement_v2.pdf.
 
 ## AirConcurrentMap has two licenses  
 

@@ -24,16 +24,24 @@ package com.infinitydb;
 
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
 
+import com.infinitydb.map.visitor.MapVisitor;
 import com.infinitydb.map.visitor.ThreadedMapVisitor;
 import com.infinitydb.map.visitor.VisitableMap;
 
@@ -114,32 +122,39 @@ import com.infinitydb.map.visitor.VisitableMap;
  * </pre>
  */
 
+@Fork(1)
+@Warmup(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@BenchmarkMode(Mode.Throughput)
+// @OutputTimeUnit(TimeUnit.SECONDS)
+@Threads(1)
 @State(Scope.Benchmark)
 public class StreamsJMHAirConcurrentMapTest {
 
     @Param({
             "com.infinitydb.map.air.AirConcurrentMap",
-            "java.util.HashMap",
-            "java.util.TreeMap",
-            "java.util.concurrent.ConcurrentSkipListMap",
-            "java.util.concurrent.ConcurrentHashMap"
+            // "java.util.HashMap",
+            // "java.util.TreeMap",
+            "java.util.concurrent.ConcurrentSkipListMap"
+    // "java.util.concurrent.ConcurrentHashMap"
     })
     static String mapClassName;
     @Param({ "0", "1", "10", "100", "1000", "10000", "100000", "1000000", "10000000" })
     static long mapSize;
-    static Map<Object, Long> map;
+    static Map<Long, Long> map;
 
     @Setup(Level.Trial)
     static public void setup() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        Class<Map<Object, Long>> mapClass =
-                (Class<Map<Object, Long>>)Class.forName(mapClassName);
+        Class<Map<Long, Long>> mapClass =
+                (Class<Map<Long, Long>>)Class.forName(mapClassName);
         map = mapClass.newInstance();
-        Random random = new Random(System.nanoTime());
+        // Random random = new Random(System.nanoTime());
+        Random random = new Random(1);
         System.gc();
         // Load up the Map
         for (long i = 0; i < mapSize; i++) {
-            long v = random.nextLong();
-            map.put(v, v);
+            long o = random.nextLong();
+            map.put(o, o);
         }
         System.gc();
     }
@@ -158,20 +173,20 @@ public class StreamsJMHAirConcurrentMapTest {
     // AirConcurrentMap is fastest above 1K Entries.
     // All are slower than parallel streams
     @Benchmark
-    public static long testSummingForEach() {
+    public static long testSummingForEachAtomicLong() {
         final AtomicLong sum = new AtomicLong();
         // We don't use addAndGet() because it loops internally
         map.forEach((k, v) -> sum.set(sum.get() + v));
         return sum.get();
     }
-    
+
     // All Maps are similar and slower than parallel streams
     @Benchmark
     public static long testSummingForEachParallel() {
         final AtomicLong sum = new AtomicLong();
         // We use addAndGet() because it is atomic, looping internally
         map.values().stream().parallel()
-            .forEach(v -> sum.addAndGet(v));
+                .forEach(v -> sum.addAndGet(v));
         return sum.get();
     }
 
@@ -179,64 +194,103 @@ public class StreamsJMHAirConcurrentMapTest {
     // All are slower than parallel streams
     @Benchmark
     public static long testSummingBiConsumer() {
-        class SummingConsumer implements BiConsumer<Object, Long> {
+        class SummingBiConsumer implements BiConsumer<Object, Long> {
             long sum = 0;
 
             public void accept(Object k, Long v) {
-              sum += v;
+                sum += v;
             }
         }
-        SummingConsumer summingConsumer = new SummingConsumer();
-        map.forEach(summingConsumer);
-        return summingConsumer.sum;
+        SummingBiConsumer summingBiConsumer = new SummingBiConsumer();
+        map.forEach(summingBiConsumer);
+        return summingBiConsumer.sum;
     }
 
-    // AirConcurrentMap is faster at all sizes.
+    // AirConcurrentMap is faster at all sizes except 0 and 1.
+    @Benchmark
+    public static long testSummingMapVisitor() {
+        if (map instanceof VisitableMap) {
+            class SummingMapVisitor extends MapVisitor<Long, Long> {
+                long sum = 0;
+                
+                @Override
+                public void visit(Long k, Long v) {
+                    sum += v;
+                }
+            }
+
+            SummingMapVisitor smv = new SummingMapVisitor();
+            ((VisitableMap)map).visit(smv);
+            return smv.sum;
+        } else {
+            class SummingBiConsumer implements BiConsumer<Object, Long> {
+                long sum = 0;
+
+                public void accept(Object k, Long v) {
+                    sum += v;
+                }
+            }
+            SummingBiConsumer summingBiConsumer = new SummingBiConsumer();
+            map.forEach(summingBiConsumer);
+            return summingBiConsumer.sum;
+        }
+    }
+
+    // AirConcurrentMap is faster at all sizes except 0 and 1.
     // This is the fastest.
     @Benchmark
-    public static long testSummingStream() {
-        return new SummingVisitor().getSum(map);
+    public static long testSummingThreadedMapVisitor() {
+        if (map instanceof VisitableMap) {
+            SummingThreadedMapVisitor stmv = new SummingThreadedMapVisitor();
+            // Use the fastest AirConcurrentMap parallel scan
+            ((VisitableMap)map).visit(stmv);
+            return stmv.sum;
+        } else {
+            // The code for sum() is just a reduce, giving the same
+            // performance
+            return map.values().stream().parallel()
+                    .mapToLong(o -> ((Long)o).longValue())
+//                     .reduce(0L, (x, y) -> x + y);
+                    .sum();
+        }
     }
 
-    static class SummingVisitor extends ThreadedMapVisitor<Object, Long> {
+    static class SummingThreadedMapVisitor extends ThreadedMapVisitor<Long, Long> {
         long sum = 0;
 
-        long getSum(Map<Object, Long> map) {
-            if (map instanceof VisitableMap) {
-                // Use the fast AirConcurrentMap parallel scan
-                ((VisitableMap)map).visit(this);
-                return sum;
-            } else {
-                // Drop back to slower streams.
-                // The code for sum() is just a reduce, giving the same
-                // performance
-                return map.values().stream().parallel()
-                        .mapToLong(v -> ((Long)v).longValue())
-//                        .reduce(0L, (x, y) -> x + y);
-                        .sum();
-            }
-        }
-
-        /*
-         * implement MapVisitor for speed. Invoked when used with a VisitableMap
-         * such as AirConcurrentMap. Similar to BiConsumer.
-         */
+        // Implement MapVisitor
         @Override
-        public void visit(Object k, Long v) {
-            sum += v.longValue();
+        public void visit(Long k, Long v) {
+            sum += k;
         }
 
         // Implement ThreadedMapVisitor For parallelism
         @Override
-        public SummingVisitor split() {
-            return new SummingVisitor();
+        public SummingThreadedMapVisitor split() {
+            return new SummingThreadedMapVisitor();
         }
 
         // Implement ThreadedMapVisitor For parallelism
         @Override
-        public void merge(ThreadedMapVisitor tmv) {
-            sum += ((SummingVisitor)tmv).sum;
+        public void merge(ThreadedMapVisitor stmv) {
+            sum += ((SummingThreadedMapVisitor)stmv).sum;
         }
+    }
+
+    @Benchmark
+    public static long testSummingSerialStream() {
+        return map.values().stream()
+                .mapToLong(o -> ((Long)o).longValue())
+                // .reduce(0L, (x, y) -> x + y);
+                .sum();
+    }
+
+    @Benchmark
+    public static long testSummingParallelStream() {
+        return map.values().stream().parallel()
+                .mapToLong(o -> ((Long)o).longValue())
+                // .reduce(0L, (x, y) -> x + y);
+                .sum();
     }
 
 }

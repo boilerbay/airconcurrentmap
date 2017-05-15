@@ -2,7 +2,6 @@ Copyright (C) 2014-2017 Roger L Deran, all rights reserved.
 
 # AirConcurrentMap
 
-
 A fast, memory-efficient, multi-core implementation of the java.util.concurrent.ConcurrentNavigableMap interface which is compatible with Java 1.8 and later. This makes it a drop-in replacement for any other Map (with Comparable keys). The efficiency and performance measurements are documented graphically in [AirConcurrentMap Performance Testing.pdf](https://boilerbay.com/docs/AirConcurrentMap_Performance_Testing.pdf) There are performance tests in test/src/jmh which show similar results in a different way using the now-standard [Java Microbenchmark Harness](http://openjdk.java.net/projects/code-tools/jmh/). Also see [TwitterDemo.java](https://boilerbay.com/docs/TwitterDemo.java). It has high-performance extensions for scanning serially or in parallel.
 
 See <https://boilerbay.com/airmap>. 

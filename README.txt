@@ -294,8 +294,8 @@ put, and remove.
 
 --- # Java Microbenchmarking Harness Performance Results 
 
-The tests/jmh/maptest directory contains a JMH test for 
-definitive performance comparisons. Here are the results: 
+The jmh/maptest directory contains a JMH test for definitive 
+performance comparisons. Here are the results: 
 
 ```
     Result "testSummingStream":
@@ -306,7 +306,8 @@ definitive performance comparisons. Here are the results:
     
     # Run complete. Total time: 01:58:59
 
-    Benchmark                                                                     (mapClassName)  (mapSize)   Mode  Cnt         Score        Error  Units StreamsJMHAirConcurrentMapTest.testSummingStream     com.infinitydb.map.air.AirConcurrentMap          0  thrpt  200  47669627.157 ▒ 408068.881  ops/s
+    Benchmark                                                                     (mapClassName)  (mapSize)   Mode  Cnt         Score        Error  Units
+    StreamsJMHAirConcurrentMapTest.testSummingStream     com.infinitydb.map.air.AirConcurrentMap          0  thrpt  200  47669627.157 ▒ 408068.881  ops/s
     StreamsJMHAirConcurrentMapTest.testSummingStream     com.infinitydb.map.air.AirConcurrentMap          1  thrpt  200  36128245.803 ▒ 219021.093  ops/s
     StreamsJMHAirConcurrentMapTest.testSummingStream     com.infinitydb.map.air.AirConcurrentMap         10  thrpt  200  28819134.716 ▒ 215535.681  ops/s
     StreamsJMHAirConcurrentMapTest.testSummingStream     com.infinitydb.map.air.AirConcurrentMap        100  thrpt  200   5983782.906 ▒  12171.457  ops/s

@@ -29,19 +29,24 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 
-import com.infinitydb.StreamsJMHAirConcurrentMapTest.SummingVisitor;
 import com.infinitydb.map.air.AirConcurrentMap;
 import com.infinitydb.map.visitor.MapVisitor;
 import com.infinitydb.map.visitor.ThreadedMapVisitor;
@@ -72,10 +77,10 @@ import com.infinitydb.map.visitor.VisitableMap;
  * mvn clean install
  * </pre>
  * 
- * Then, to run a test, do for example:
+ * Then, to run a test, do for example (or just use defaults):
  * 
  * <pre>
- * java  -Xmx1g -jar target/benchmarks.jar -f 1 -i 2 -wi 5 <testName>
+ * java  -Xmx4g -jar target/benchmarks.jar -f 1 -i 2 -wi 5 <testName>
  * </pre>
  * 
  * The available test parameters can be shown with:
@@ -92,6 +97,11 @@ import com.infinitydb.map.visitor.VisitableMap;
  * changed to match in that case.
  */
 
+@Fork(1)
+@Warmup(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@BenchmarkMode(Mode.Throughput)
+//@OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
 public class AirConcurrentMapJMHTest {
 
