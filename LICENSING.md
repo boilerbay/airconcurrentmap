@@ -9,10 +9,14 @@ This archive file contains AirConcurrentMap version 3.2.1 built on 2017-05-15-03
 
 Here are the basic, non-authoritative descriptions of the licenses:
 
+For 3.2.1 and earlier, the Commercial and non-Commercial license agreements still apply (see the pdfs):
+
   * Free binary for non-commercial use. The archive file containing this LICENSING.md and the airconcurrentmap.jar may be copied and distributed and used anywhere that it does not further a commercial enterprise.
 
   * Commercial license.
 Any use which furthers a commercial enterprise needs a commercial license. Email support at boilerbay.com for licensing. Commercial licensees receive the latest versions and improvements, including some features not in the free release, such as advanced performance, unreleased alpha or beta improvements and new types of Maps plus features suggested by or written by source contributors. This license offers time-limited email support and training plus unlimited first-come-first-served email support and training thereafter during the license period. 
+
+For 3.2.2 and later, the licensing is entirely paid-for, and the latest version can be obtained by purchasing it at boilerbay.com. Further development and bug fixes plus support will be carried on there and no further changes will be checked into github. There is both a time-limited trial version and a paid-for deployment version. License fees are no longer negotiated, but are fixed. See the trial and deployment license agreements.
 
 [AirConcurrentMap](https://boilerbay.com/airmap) and [InfinityDB](https://boilerbay.com/infinitydb), which is a persistent multicore embedded database, are products of BoilerBay Inc. They are available separately. Both are US patent applied for. See [boilerbay.com](https://boilerbay.com). 
 
